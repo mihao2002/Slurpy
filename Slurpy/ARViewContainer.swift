@@ -14,13 +14,14 @@ struct ARViewContainer: UIViewRepresentable {
         // Add tongue tip marker
         let sphere = ModelEntity(mesh: .generateSphere(radius: 0.01))
         sphere.model?.materials = [SimpleMaterial(color: .red, isMetallic: true)]
+        sphere.isEnabled = false
+        
         let anchor = AnchorEntity(.face)
         anchor.addChild(sphere)
         arView.scene.addAnchor(anchor)
         
-        sphere.name = "tongueTipMarker"
-        
         context.coordinator.tongueMarker = sphere
+        context.coordinator.anchor = anchor
         
         return arView
     }
@@ -33,6 +34,7 @@ struct ARViewContainer: UIViewRepresentable {
     
     class Coordinator: NSObject, ARSessionDelegate {
         var tongueMarker: ModelEntity?
+        var anchor: AnchorEntity?
         
         func session(_ session: ARSession, didUpdate frame: ARFrame) {
             guard let faceAnchor = frame.anchors.compactMap({ $0 as? ARFaceAnchor }).first else { return }
@@ -42,11 +44,11 @@ struct ARViewContainer: UIViewRepresentable {
                     if let tongueOut = faceAnchor.blendShapes[.tongueOut] as? Float {
                         if tongueOut > 0.5 {
                             tongueMarker.isEnabled = true
-                            tongueMarker.position = SIMD3<Float>(
-                                faceAnchor.transform.columns.3.x,
-                                faceAnchor.transform.columns.3.y - 0.02,
-                                faceAnchor.transform.columns.3.z - 0.05
-                            )
+                            
+                            // Approximate position in front of mouth
+                            let offset = Float(tongueOut) * 0.05 // extend as tongueOut increases
+                            tongueMarker.position = SIMD3<Float>(0, -0.02, -0.1 - offset)
+                            
                         } else {
                             tongueMarker.isEnabled = false
                         }
