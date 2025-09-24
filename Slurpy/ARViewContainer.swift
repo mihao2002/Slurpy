@@ -5,6 +5,10 @@ import ARKit
 struct ARViewContainer: UIViewRepresentable {
     func makeUIView(context: Context) -> ARView {
         let arView = ARView(frame: .zero)
+
+        // Disable live camera feed so markers are visible
+        arView.environment.background = .color(.black)
+        arView.cameraMode = .nonAR
         
         let config = ARFaceTrackingConfiguration()
         config.isLightEstimationEnabled = true
